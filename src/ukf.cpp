@@ -318,6 +318,7 @@ void UKF::UpdateLidar(MeasurementPackage meas_package) {
   */
 
   int n_z =2;
+/*
    MatrixXd Zsig = MatrixXd(n_z, 2 * n_aug_ + 1);
   
   //pr
@@ -388,6 +389,30 @@ void UKF::UpdateLidar(MeasurementPackage meas_package) {
   //update state mean and covariance matrix
   x_ = x_ + K * z_diff;
   P_ = P_ - K*S*K.transpose();
+*/
+   VectorXd z = VectorXd(2);
+   z<< meas_package.raw_measurements_[0],meas_package.raw_measurements_[1];
+   MatrixXd H_ = MatrixXd(2,5);
+   H_<< 1,0,0,0,0,
+        0,1,0,0,0;
+   VectorXd y;
+
+   MatrixXd R_ = MatrixXd(n_z,n_z);
+   R_ <<    std_laspx_*std_laspx_, 0, 
+          0, std_laspy_*std_laspy_;
+   y = z - H_*x_;
+   
+   MatrixXd S;
+   S = H_*P_*H_.transpose() +R_;
+   
+   MatrixXd K;
+   K = P_*H_.transpose()*S.inverse();
+   
+   //new estimate
+   x_ += (K * y);
+   long x_size = x_.size();
+   MatrixXd I = MatrixXd::Identity(x_size, x_size);
+   P_ -= K * H_ * P_;
 }
 
 /**
